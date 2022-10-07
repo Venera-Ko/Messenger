@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>787906017450-6buk3jum3d7bc9h1u8r3mo2nc378m0de.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.787906017450-6buk3jum3d7bc9h1u8r3mo2nc378m0de</string>
+	<key>API_KEY</key>
+	<string>AIzaSyB1im-g0tIpIOueiixAp3mTULbBQTW4rz8</string>
+	<key>GCM_SENDER_ID</key>
+	<string>787906017450</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.vnrk.Messenger</string>
+	<key>PROJECT_ID</key>
+	<string>messenger-bbcfe</string>
+	<key>STORAGE_BUCKET</key>
+	<string>messenger-bbcfe.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:787906017450:ios:8c207da289575915deb8d3</string>
+	<key>DATABASE_URL</key>
+	<string>https://messenger-bbcfe-default-rtdb.europe-west1.firebasedatabase.app</string>
+</dict>
+</plist>
