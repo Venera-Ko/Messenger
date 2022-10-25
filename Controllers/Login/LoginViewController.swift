@@ -8,6 +8,8 @@
 import UIKit
 import FirebaseAuth
 import FacebookLogin
+import GoogleSignIn
+import Firebase
 
 class LoginViewController: UIViewController {
     
@@ -72,17 +74,30 @@ class LoginViewController: UIViewController {
     //        return fbLoginButton
     //    }
     
-    private var facebookLoginButton = FBLoginButton()
+    private let facebookLoginButton = FBLoginButton()
+    private let googleLoginButton = GIDSignInButton()
+    
+    
+    private var loginObserver: NSObjectProtocol?
     
     override func viewDidLoad() {
-        
         super.viewDidLoad()
         
-        if let token = AccessToken.current,
-           !token.isExpired {
-            // User is logged in, do work such as go to next view controller.
-            self.navigationController?.dismiss(animated: true)
+        loginObserver = NotificationCenter.default.addObserver(forName: .didLogInNotification, object: nil, queue: .main) { [weak self] _ in
+           guard let strongSelf = self else {
+               return
+           }
+           
+           strongSelf.navigationController?.dismiss(animated: true)
         }
+        
+        GIDSignIn.sharedInstance().presentingViewController = self
+        
+//        if let token = AccessToken.current,
+//           !token.isExpired {
+//            // User is logged in, do work such as go to next view controller.
+//            self.navigationController?.dismiss(animated: true)
+//        }
         
         title = "Log In"
         view.backgroundColor = .white
@@ -99,9 +114,7 @@ class LoginViewController: UIViewController {
         emailField.delegate = self
         passwordField.delegate = self
         
-        facebookLoginButton.delegate = self
-        
-        //add subviews
+        ///subviews
         view.addSubview(scrollView)
         scrollView.addSubview(imageView)
         scrollView.addSubview(emailField)
@@ -109,6 +122,13 @@ class LoginViewController: UIViewController {
         scrollView.addSubview(loginButton)
         
         scrollView.addSubview(facebookLoginButton)
+        scrollView.addSubview(googleLoginButton)
+    }
+    
+    deinit {
+        if let observer = loginObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
     
     override func viewDidLayoutSubviews() {
@@ -136,6 +156,10 @@ class LoginViewController: UIViewController {
         facebookLoginButton.delegate = self
         facebookLoginButton.center = scrollView.center
         facebookLoginButton.frame.origin.y = loginButton.bottom+20
+        
+        ///google login button
+        googleLoginButton.center = scrollView.center
+        googleLoginButton.frame.origin.y = facebookLoginButton.bottom+20
     }
     
     @objc private func loginButtonTapped() {
@@ -148,8 +172,7 @@ class LoginViewController: UIViewController {
             return
         }
         
-        //Firebase Log In
-        
+        ///firebase log in
         FirebaseAuth.Auth.auth().signIn(withEmail: email, password: password) { [weak self] authResult, error in
             guard let strongSelf = self else {
                 return
