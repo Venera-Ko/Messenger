@@ -61,13 +61,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             return
         }
         
-//        guard let user == user else {
-//            return
-//        }
-//        if user != nil {
-//            print("did signin with google \(user)")
-//        }
-//
+        //        guard let user == user else {
+        //            return
+        //        }
+        //        if user != nil {
+        //            print("did signin with google \(user)")
+        //        }
+        //
         guard let email = user.profile.email,
               let firstName = user.profile.givenName,
               let lastName = user.profile.familyName else {
@@ -77,9 +77,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         DatabaseManager.shared.userExists(with: email) { exists in
             if !exists {
                 ///insert to database
-                DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName,
-                                                                    lastName: lastName,
-                                                                    email: email))
+                let chatUser = ChatAppUser(firstName: firstName,lastName: lastName, email: email)
+                DatabaseManager.shared.insertUser(with: chatUser) { succeess in
+                    if succeess {
+                        ///upload image
+                        
+                        if user.profile.hasImage {
+                            guard let url = user.profile.imageURL(withDimension: 200) else {
+                                return
+                            }
+                            
+                            URLSession.shared.dataTask(with: url) { data, _,_ in
+                                guard let data = data else {
+                                    return
+                                }
+                                
+                                let fileName = chatUser.profilePictureFilename
+                                StorageManager.shared.uploadProfilePicture(with: data, fileName: fileName) { result in
+                                    switch result {
+                                    case .success(let downloadURL):
+                                        UserDefaults.standard.set(downloadURL, forKey: "profile_picture_url")
+                                        print(downloadURL)
+                                    case .failure(let error):
+                                        print("storage manager error: \(error)")
+                                    }
+                                }
+                            }.resume()
+                        }
+                    }
+                }
             }
         }
         
@@ -93,7 +119,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         FirebaseAuth.Auth.auth().signIn(with: credential) { authResult, error in
             guard authResult != nil, error == nil else {
                 print("failed to log in with google credential")
-            return
+                return
             }
             
             print("successfully signed in with google credential")

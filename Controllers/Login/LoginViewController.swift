@@ -87,20 +87,20 @@ class LoginViewController: UIViewController {
         super.viewDidLoad()
         
         loginObserver = NotificationCenter.default.addObserver(forName: .didLogInNotification, object: nil, queue: .main) { [weak self] _ in
-           guard let strongSelf = self else {
-               return
-           }
-           
-           strongSelf.navigationController?.dismiss(animated: true)
+            guard let strongSelf = self else {
+                return
+            }
+            
+            strongSelf.navigationController?.dismiss(animated: true)
         }
         
         GIDSignIn.sharedInstance().presentingViewController = self
         
-//        if let token = AccessToken.current,
-//           !token.isExpired {
-//            // User is logged in, do work such as go to next view controller.
-//            self.navigationController?.dismiss(animated: true)
-//        }
+        //        if let token = AccessToken.current,
+        //           !token.isExpired {
+        //            // User is logged in, do work such as go to next view controller.
+        //            self.navigationController?.dismiss(animated: true)
+        //        }
         
         title = "Log In"
         view.backgroundColor = .white
@@ -236,11 +236,7 @@ extension LoginViewController: LoginButtonDelegate {
             return
         }
         
-        let facebookRequest = FBSDKLoginKit.GraphRequest(graphPath: "me",
-                                                         parameters: ["fields": "email, name"],
-                                                         tokenString: token,
-                                                         version: nil,
-                                                         httpMethod: .get)
+        let facebookRequest = FBSDKLoginKit.GraphRequest(graphPath: "me", parameters: ["fields": "email, first_name, last_name, picture.type(large)"], tokenString: token, version: nil, httpMethod: .get)
         
         facebookRequest.start { _, result, error in
             guard let result = result as? [String: Any], error == nil else {
@@ -248,24 +244,60 @@ extension LoginViewController: LoginButtonDelegate {
                 return
             }
             
-            guard let userName = result["name"] as? String, let email = result["email"] as? String else {
+            print(result)
+            
+            guard let firstName = result["first_name"] as? String,
+                  let lastName = result["last_name"] as? String,
+                  let email = result["email"] as? String,
+                  let picture = result["picture"] as? [String: Any],
+                  let data = picture["data"] as? [String: Any],
+                  let pictureURL = data["url"] as? String else {
                 print("failed to get email and/or name from fb result")
                 return
             }
             
-            let nameComponents = userName.components(separatedBy: " ")
-            guard nameComponents.count == 2 else {
-                return
-            }
-            
-            let firstName = nameComponents[0]
-            let lastName = nameComponents[1]
+            //            let nameComponents = userName.components(separatedBy: " ")
+            //            guard nameComponents.count == 2 else {
+            //                return
+            //            }
+            //
+            //            let firstName = nameComponents[0]
+            //            let lastName = nameComponents[1]
             
             DatabaseManager.shared.userExists(with: email) { exists in
                 if !exists {
-                    DatabaseManager.shared.insertUser(with: ChatAppUser(firstName: firstName,
-                                                                        lastName: lastName,
-                                                                        email: email))
+                    let chatUser = ChatAppUser(firstName: firstName, lastName: lastName, email: email)
+                    DatabaseManager.shared.insertUser(with: chatUser) { success in
+                        if success {
+                            
+                            guard let url = URL(string: pictureURL) else {
+                                return
+                            }
+                            
+                            print("downloading data from facebook image")
+                            
+                            URLSession.shared.dataTask(with: url) { data, _,_ in
+                                guard let data = data else {
+                                    print("failed to get data from facebook")
+                                    return
+                                }
+                                
+                                print("uploading data from facebook")
+                                
+                                ///uploads image
+                                let fileName = chatUser.profilePictureFilename
+                                StorageManager.shared.uploadProfilePicture(with: data, fileName: fileName) { result in
+                                    switch result {
+                                    case .success(let downloadURL):
+                                        UserDefaults.standard.set(downloadURL, forKey: "profile_picture_url")
+                                        print(downloadURL)
+                                    case .failure(let error):
+                                        print("storage manager error: \(error)")
+                                    }
+                                }
+                            }.resume()
+                        }
+                    }
                 }
             }
             ///6
