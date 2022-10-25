@@ -92,7 +92,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         
         FirebaseAuth.Auth.auth().signIn(with: credential) { authResult, error in
             guard authResult != nil, error == nil else {
-                print("failed to lig in with google credential")
+                print("failed to log in with google credential")
             return
             }
             
