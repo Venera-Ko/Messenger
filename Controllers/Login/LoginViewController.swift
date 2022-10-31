@@ -191,7 +191,11 @@ class LoginViewController: UIViewController {
                 print("Error \(String(describing: error?.localizedDescription))")
                 return
             }
+            
             let user = result.user
+            
+            UserDefaults.standard.set(email, forKey: "email")
+            
             print("User signed in \(user)")
             strongSelf.navigationController?.dismiss(animated: true)
         }
@@ -255,6 +259,8 @@ extension LoginViewController: LoginButtonDelegate {
                 print("failed to get email and/or name from fb result")
                 return
             }
+            
+            UserDefaults.standard.set(email, forKey: "email")
             
             //            let nameComponents = userName.components(separatedBy: " ")
             //            guard nameComponents.count == 2 else {

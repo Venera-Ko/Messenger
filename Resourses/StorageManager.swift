@@ -18,14 +18,14 @@ final class StorageManager {
     
     ///uploads picture to firebase storage and returns completion with url string to download
     public func uploadProfilePicture(with data: Data, fileName: String, completion: @escaping UploadPictureCompletion) {
-        storage.child("images\(fileName)").putData(data) { metadata, error in
+        storage.child("images/\(fileName)").putData(data) { metadata, error in
             guard error == nil else {
                 print("failed to upload data to firebase for picture")
                 completion(.failure(StorageErrors.failedToUpload))
                 return
             }
             
-            self.storage.child("images\(fileName)").downloadURL { url, error in
+            self.storage.child("images/\(fileName)").downloadURL { url, error in
                 guard let url = url else {
                     print("failed to get download url")
                     completion(.failure(StorageErrors.failedToGetDownloadURL))
@@ -43,4 +43,16 @@ final class StorageManager {
         case failedToUpload, failedToGetDownloadURL
     }
     
+    public func downloadURL(for path: String, completion: @escaping (Result<URL, Error>) -> Void) {
+        let reference = storage.child(path)
+        
+        reference.downloadURL { url, error in
+            guard let url = url, error == nil else {
+                completion(.failure(StorageErrors.failedToGetDownloadURL))
+                return
+            }
+            
+            completion(.success(url))
+        }
+    }
 }
